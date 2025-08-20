@@ -1,60 +1,79 @@
-# This is my package matomo-proxy-laravel
+# Matomo Proxy for Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/mattitjaab/matomo-proxy-laravel.svg?style=flat-square)](https://packagist.org/packages/mattitjaab/matomo-proxy-laravel)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/mattitjaab/matomo-proxy-laravel/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/mattitjaab/matomo-proxy-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mattitjaab/matomo-proxy-laravel/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mattitjaab/matomo-proxy-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/mattitjaab/matomo-proxy-laravel.svg?style=flat-square)](https://packagist.org/packages/mattitjaab/matomo-proxy-laravel)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
-
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/matomo-proxy-laravel.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/matomo-proxy-laravel)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+This package provides a plug-and-play **server-side Matomo tracking middleware** for Laravel.
+Instead of embedding JavaScript trackers in your frontend, requests are tracked directly from your Laravel app to your Matomo instance, ensuring better privacy, ad-blocker resilience, and simplified integration.
 
 ## Installation
 
-You can install the package via composer:
+Install the package via Composer:
 
 ```bash
 composer require mattitjaab/matomo-proxy-laravel
 ```
 
-You can publish and run the migrations with:
-
-```bash
-php artisan vendor:publish --tag="matomo-proxy-laravel-migrations"
-php artisan migrate
-```
-
-You can publish the config file with:
+Publish the config file:
 
 ```bash
 php artisan vendor:publish --tag="matomo-proxy-laravel-config"
 ```
 
-This is the contents of the published config file:
+This will create a `config/matomo-proxy-laravel.php` file. Example:
 
 ```php
 return [
+    'enabled' => env('MATOMO_ENABLED', true),
+
+    // Full Matomo tracking endpoint (must include /matomo.php)
+    'base_url' => env('MATOMO_BASE_URL', ''),
+
+    // Matomo site ID
+    'site_id' => env('MATOMO_SITE_ID', null),
+
+    // Optional token_auth (can be null for anonymous tracking)
+    'token' => env('MATOMO_TOKEN', null),
+
+    // Paths that should never be tracked
+    'ignore' => [
+        'telescope/*', 'horizon/*', 'health', '_debugbar/*',
+    ],
+
+    // HTTP client behavior
+    'timeout' => env('MATOMO_TIMEOUT', 2),
+    'retry' => [
+        'times' => env('MATOMO_RETRY_TIMES', 0),
+        'sleep' => env('MATOMO_RETRY_SLEEP_MS', 100), // milliseconds
+    ],
 ];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="matomo-proxy-laravel-views"
 ```
 
 ## Usage
 
+Register the middleware globally in your `bootstrap/app.php`:
+
 ```php
-$matomoProxyLaravel = new MattitjaAB\MatomoProxyLaravel();
-echo $matomoProxyLaravel->echoPhrase('Hello, MattitjaAB!');
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->append(\MattitjaAB\MatomoProxyLaravel\Middleware\MatomoProxyLaravelMiddleware::class);
+})
 ```
+
+2. Configure your `.env` file:
+
+```dotenv
+MATOMO_ENABLED=true
+MATOMO_BASE_URL=https://analytics.example.com/matomo.php
+MATOMO_SITE_ID=1
+MATOMO_TOKEN=null
+MATOMO_TIMEOUT=2
+MATOMO_RETRY_TIMES=0
+MATOMO_RETRY_SLEEP_MS=100
+```
+
+✅ That’s it. All requests will now be tracked server-side in Matomo without requiring any frontend JS snippet.
 
 ## Testing
 
@@ -66,18 +85,10 @@ composer test
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
 ## Credits
 
-- [MattitjaAB](https://github.com/MattitjaAB)
-- [All Contributors](../../contributors)
+* [MattitjaAB](https://github.com/MattitjaAB)
+* [All Contributors](../../contributors)
 
 ## License
 

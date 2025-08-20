@@ -63,10 +63,7 @@
         "laravel": {
             "providers": [
                 "MattitjaAB\\MatomoProxyLaravel\\MatomoProxyLaravelServiceProvider"
-            ],
-            "aliases": {
-                "MatomoProxyLaravel": "MattitjaAB\\MatomoProxyLaravel\\Facades\\MatomoProxyLaravel"
-            }
+            ]
         }
     },
     "minimum-stability": "dev",
